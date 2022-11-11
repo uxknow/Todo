@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://kit.fontawesome.com/e0e4bb692b.js" crossorigin="anonymous" defer></script>
+    <title>ToDo list</title>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="todo-container">
+            <aside class="todo__aside-nav">
+                <ul class="todo__category-list">
+                    <li class="category__list-item active">All</li>
+                    <li class="category__list-item">Pending</li>
+                    <li class="category__list-item">Completed</li>
+                    <li class="category__list-item">Deleted</li>
+                </ul>
+            </aside>
+            <div class="todo__main">
+                <h2 class="todo__title">All Tasks</h2>
+                <div class="todo-form">
+                    <input type="text" placeholder="Add a new task">
+                    <button class="todo__add-button">Clear All</button>
+                </div>
+                <div class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
