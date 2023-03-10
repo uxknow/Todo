@@ -157,7 +157,7 @@ function renderTodo(filter) {
     if(todoTasks) {
     todoTasks.forEach((task, idx) => {
         const isCompleted = task.status === "completed" ? "checked" : "";
-        const isActiveTab = task.status === 'completed' ? 'completed' : 'pending' || 'all';
+        const isActiveTab = task.status === 'completed' ? 'completed' : task.status === 'pending' ? 'pending' : 'delete' || 'all';
 
         if(filter === task.status || filter === 'all') 
         li += `
@@ -200,7 +200,8 @@ function updateStatus(selectedTask) {
 
 //delete current task
 function deleteTask(id, filter) {
-    todoTasks.splice(id, 1);
+    //todoTasks.splice(id, 1);
+    todoTasks[id] = {...todoTasks[id], status: 'delete'}
     localStorage.setItem('todo-list', JSON.stringify(todoTasks));
     renderTodo(filter);
 } 
