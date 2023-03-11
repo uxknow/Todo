@@ -1,252 +1,200 @@
-// const input = document.querySelector('input');
-// const butttonAdd = document.querySelector('.todo__add-button');
-
-// let taskContainer = document.querySelector('.result');
-
-// const $ = document.querySelector.bind(document);
-
-// const tasks = {
-//     all: [],
-//     pending: [],
-//     completed: [],
-//     deleted: [],
-// }
-
-
-// butttonAdd.disabled = true;
-
-// function renderTasks(data) {
-//     taskContainer.textContent = '';
-//     const ul = document.createElement('ul');
-//     ul.className = 'tasks-list';
-
-//     data.forEach((task, idx) => {
-//         ul.innerHTML += `
-//         <li class="tasks-item">
-//             <div>
-//                 <input id="check${idx}" onchange=completeTask(${idx}) class="checkbox-custom" type="checkbox">
-//                 <label for="check${idx}">
-//                 <span>${task}</span>
-//                 </label>
-//             </div>
-//             <div class="icons-container">
-//                 <i class="edit fa-regular fa-pen-to-square"></i>
-//                 <i onclick=deleteTask(${idx}) class="basket fa-regular fa-trash-can"></i>
-//             </div>
-//         </li>
-//         `
-//     })
-
-//     taskContainer.append(ul);
-// }
-
-// function disabledButton() {
-//     if(input.value) {
-//         butttonAdd.disabled = false;
-//     } else {
-//         butttonAdd.disabled = true;
-//     }
-// }
-// input.addEventListener('input', disabledButton);
-
-// function addToTaskList() {
-//     tasks.all.push(input.value);
-//     renderTasks(tasks.all.concat(tasks.deleted, tasks.pending, tasks.completed));
-//     butttonAdd.disabled = true;
-//     input.value = '';
-// }
-
-// butttonAdd.addEventListener('click', addToTaskList)
-
-// //Выполненые задачи из списка
-// function completeTask(idx) {
-//     if(this) {
-//         tasks.completed.push(tasks.all.splice(idx,1));
-//         renderTasks(tasks.all);
-//     }
-// }
-
-// //Удаление задачи из списка
-// function deleteTask(idx) {
-//     if (this) { 
-//         console.log(tasks.all[idx])
-//         tasks.deleted.push(tasks.all.splice(idx, 1));
-//         renderTasks(tasks.all);
-//     }
-// }
-
-// //Активная категория todo
-// const tabContainer = document.querySelector('.todo__category-list');
-
-// function clickHandlerActiveTab(e) {
-//    const tabList = document.querySelectorAll('.category__list-item');
-//    const click = e.target.closest('.category__list-item');
-
-//    if (click) {
-//     const activeCategory = click.textContent.toLowerCase();
-
-//     for(let tab of tabList) {
-//         tab.classList.remove('active');
-//     }
-//     click.classList.add('active');
-//     renderTasks(tasks[activeCategory])
-
-//    if(activeCategory === 'deleted' && tasks.deleted.length) {
-//        document.querySelectorAll('.basket').forEach(item => item.classList.add('no-active'));
-//     } 
-
-//     if(activeCategory === 'completed' && tasks.completed.length) {
-//         document.querySelectorAll('span').forEach(item => item.classList.add('delete'));
-//     }
-
-//     if(activeCategory === 'all') {
-//         renderTasks(tasks.all.concat(tasks.deleted, tasks.pending, tasks.completed));
-//     }
-
-// }
-// }
-// tabContainer.addEventListener('click', clickHandlerActiveTab)
-
-
-
-
-
-
-
-
-
-
-
-//initial data
-const taskInput = document.querySelector('input');
-const clearBtn = document.querySelector('.todo__add-button');
-
-const taskContainer = document.querySelector('.result');
-
-const tabContainer = document.querySelector('.todo__category-list');
-
+const taskInput = document.querySelector(".form__input");
+const addBtn = document.querySelector(".todo_add-btn");
+const clearBtn = document.querySelector(".todo_clear-btn");
+const todoForm = document.querySelector(".todo__form");
+const tabsContainer = document.querySelector(".todo__category-list");
+let taskList = document.querySelector(".result");
 
 //get localstorage todo-list
-let todoTasks = JSON.parse(localStorage.getItem('todo-list'));
+let todoTasks = JSON.parse(localStorage.getItem("todo-list")) || [];
 
-//variables for editTask
-let editTaskId;
+addBtn.disabled = true;
 let isEditedTask = false;
+let isEditId;
 
-//change active category
-function clickHandlerActiveTab(e) {
-    const click = e.target.closest('.category__list-item');
+//submit new task
+todoForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  addTask();
+  addBtn.disabled = true;
+});
 
-    if(click) {
-        document.querySelector('li.active').classList.remove('active');
-        click.classList.add('active');
+//change disabled on button
+taskInput.addEventListener("input", () => {
+  addBtn.disabled = !taskInput.value;
+});
 
-        const activeCategory = click.textContent.toLowerCase();
-        renderTodo(activeCategory)
-    }
-}
-tabContainer.addEventListener('click', clickHandlerActiveTab)
+//Function  to set active tab
+const activeTabHandler = (e) => {
+  const click = e.target.closest("li");
 
-//render todolist
-function renderTodo(filter) {
-    taskContainer.textContent = '';
-    const ul = document.createElement('ul');
-    ul.className = 'tasks-list';
-    let li = '';
+  if (!click) {
+    return;
+  }
 
-    if(todoTasks) {
-    todoTasks.forEach((task, idx) => {
-        const isCompleted = task.status === "completed" ? "checked" : "";
-        const isActiveTab = task.status === 'completed' ? 'completed' : task.status === 'pending' ? 'pending' : 'delete' || 'all';
+  document.querySelector("li.active").classList.remove("active");
+  click.classList.add("active");
 
-        if(filter === task.status || filter === 'all') 
-        li += `
-        <li class="tasks-item">
+  renderTasks();
+};
+tabsContainer.addEventListener("click", activeTabHandler);
+
+//Funcrion to render tasks
+const renderTasks = () => {
+  taskList.innerHTML = "";
+
+  let li = "";
+
+  const filteredTasks = filterTasks() || [];
+
+  filteredTasks.map((task) => {
+    const isCompleted = task.status === "completed" ? "checked" : "";
+    const isDeleted = task.status === "deleted" ? "checked" : "";
+    const deletedColor = task.status === "deleted" ? "deleted" : "";
+
+    li += `
+    <li class="task-item">
             <div class="checkbox-container">
-                <input onchange = "updateStatus(this)" id="${idx}" ${isCompleted} class="checkbox-custom" type="checkbox">
-                <label for="${idx}">
-                    <span class="${isCompleted}">${task.name}</span>
+                <input onchange = toggleChecked(this) id=${task.id} ${
+      isCompleted || isDeleted
+    }  class="checkbox-custom" type="checkbox">
+                <label for=${task.id}>
+                    <span class=${isCompleted || deletedColor}>${
+      task.text
+    }</span>
                 </label>
             </div>
             <div class="icons-container">
-                <i onclick="editTask(${idx}, '${task.name}', '${isActiveTab}')" class="edit fa-regular fa-pen-to-square"></i>
-                <i onclick="deleteTask(${idx}, '${isActiveTab}')" class="basket fa-regular fa-trash-can"></i>
+                  <i
+                    onclick="editTask(${task.id})"
+                    class="edit fa-regular fa-pen-to-square"
+                  ></i>
+
+                <i onclick="deleteTask(${task.id})"
+                } class="basket fa-regular fa-trash-can"></i>
             </div>
-        </li>
-        `
-        })
-    } 
+    </li>
+  `;
+  });
 
-    ul.innerHTML = li || `<span>You don't have any task here</span>`
-    taskContainer.append(ul);
-}
-renderTodo('all')
+  taskList.innerHTML = li || `<span>You don't have any task here</span>`;
 
-//update status of task
-function updateStatus(selectedTask) {
-    //get name of Task-name
-     const taskText = selectedTask.nextElementSibling.firstElementChild;
-    if (selectedTask.checked) {
-        taskText.classList.add('checked');
-        //update status of selected task to completed
-        todoTasks[selectedTask.id].status = 'completed';
+  updateTabAmount();
+};
+
+//Function to filter tasks on the selected tab
+const filterTasks = () => {
+  const selectedTask = document.querySelector("li.active");
+
+  if (selectedTask.textContent.toLowerCase().includes("all")) {
+    return todoTasks;
+  } else if (selectedTask.textContent.toLowerCase().includes("pending")) {
+    return todoTasks.filter((task) => task.status === "pending");
+  } else if (selectedTask.textContent.toLowerCase().includes("completed")) {
+    return todoTasks.filter((task) => task.status === "completed");
+  } else {
+    return todoTasks.filter((task) => task.status === "deleted");
+  }
+};
+
+//Function to update amount tasks to tab
+const updateTabAmount = () => {
+  const tabItems = document.querySelectorAll(".category__list-item");
+
+  for (let tab of tabItems) {
+    if (tab.textContent.toLowerCase().includes("all")) {
+      tab.innerHTML = `All <span>(${todoTasks.length})</span>`;
+    } else if (tab.textContent.toLowerCase().includes("pending")) {
+      tab.innerHTML = `Pending <span>(${
+        todoTasks.filter((task) => task.status === "pending").length
+      })</span>`;
+    } else if (tab.textContent.toLowerCase().includes("completed")) {
+      tab.innerHTML = `Completed <span>(${
+        todoTasks.filter((task) => task.status === "completed").length
+      })</span>`;
     } else {
-        taskText.classList.remove('checked');
-        //update status of selected task to pending
-        todoTasks[selectedTask.id].status = 'pending';
+      tab.innerHTML = `Deleted <span>(${
+        todoTasks.filter((task) => task.status === "deleted").length
+      })</span>`;
     }
-    localStorage.setItem('todo-list', JSON.stringify(todoTasks));
-}
+  }
+};
 
-//delete current task
-function deleteTask(id, filter) {
-    //todoTasks.splice(id, 1);
-    todoTasks[id] = {...todoTasks[id], status: 'delete'}
-    localStorage.setItem('todo-list', JSON.stringify(todoTasks));
-    renderTodo(filter);
-} 
+//Function to add new task
+const addTask = () => {
+  const taskText = taskInput.value;
 
-//change current task
-function editTask(id, text, filter) {
-    taskInput.value = text;
+  if (!taskText) {
+    return;
+  }
 
-    isEditedTask = true;
-    editTaskId = id;
+  if (!isEditedTask) {
+    const task = {
+      id: Date.now(),
+      text: taskText,
+      status: "pending",
+      isDeleted: false,
+    };
 
-    localStorage.setItem('todo-list', JSON.stringify(todoTasks));
-    renderTodo(filter);
-}
+    todoTasks.push(task);
+  } else {
+    todoTasks[isEditId].text = taskText;
+    isEditedTask = false;
+  }
 
-//Add task to array and localestorage
-function addTask(e) {
-    const userData = e.target.value.trim()
-    if(e.keyCode === 13 && userData) {
-        if (!isEditedTask)   {
-            if(!todoTasks) { //if todoTasks isnt exist, pass an empty array to todoTasks
-                todoTasks = [];
-            }
-            const newTask = {name: userData, status: 'pending'};
-            todoTasks.push(newTask);
-            } else {
-                todoTasks[editTaskId].name = userData;
-                isEditedTask = false;
-            }
-        taskInput.value = '';
-    }
-    
-    localStorage.setItem('todo-list', JSON.stringify(todoTasks));
-   
-    renderTodo('all');
-}
+  taskInput.value = "";
+  renderTasks();
 
-taskInput.addEventListener('keyup', addTask)
+  localStorage.setItem("todo-list", JSON.stringify(todoTasks));
+};
 
-//Delete  all in todo array and localestorage
-function clearAll() {
-    taskContainer.innerHTML = '';
-    todoTasks.length = 0;
-    localStorage.clear();
-}
+//Function  to toggle completed/pending task
+const toggleChecked = (selectedTask) => {
+  const task = todoTasks.find((task) => task.id === +selectedTask.id);
+  const index = todoTasks.findIndex((task) => task.id === +selectedTask.id);
 
-clearBtn.addEventListener('click', clearAll)
+  if (selectedTask.checked) {
+    todoTasks[index] = { ...task, status: "completed", isDeleted: false };
+  } else {
+    todoTasks[index] = { ...task, status: "pending", isDeleted: false };
+  }
+  renderTasks();
 
+  localStorage.setItem("todo-list", JSON.stringify(todoTasks));
+};
+
+//Function to delete task
+const deleteTask = (id) => {
+  const task = todoTasks.find((task) => task.id === id);
+  const index = todoTasks.findIndex((task) => task.id === id);
+
+  if (id && !todoTasks[index].isDeleted) {
+    todoTasks[index] = { ...task, status: "deleted", isDeleted: true };
+  } else if (id && todoTasks[index].isDeleted) {
+    todoTasks = todoTasks.filter((el) => el.id !== task.id);
+  }
+
+  renderTasks();
+
+  localStorage.setItem("todo-list", JSON.stringify(todoTasks));
+};
+
+//Function to edit task
+const editTask = (id) => {
+  const task = todoTasks.find((task) => task.id === id);
+  const index = todoTasks.findIndex((task) => task.id === id);
+
+  taskInput.value = task.text;
+  isEditedTask = true;
+  isEditId = index;
+};
+
+//Clear localeStorage
+const clearTodoList = () => {
+  localStorage.clear();
+  todoTasks.length = 0;
+  renderTasks();
+};
+clearBtn.addEventListener("click", clearTodoList);
+
+renderTasks();
